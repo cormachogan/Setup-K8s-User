@@ -58,12 +58,8 @@ fi
 mycontext=`kubectl config current-context`
 
 echo
-echo "*** Current context is ${mycontext} ***"
-echo
-
-echo
-echo
-echo "*** Creating a new restricted namespace ${namespace} for user ${user} ***"
+echo "*** Current context is ${mycontext}" 
+echo "*** Creating a new restricted namespace ${namespace} for user ${user}"
 echo
 
 echo
@@ -243,7 +239,7 @@ kubectl delete ns ${namespace} 2>/dev/null
 echo
 kubectl create ns ${namespace}
 echo
-kubectl label ns bob user=${namespace}
+kubectl label ns ${user} user=${namespace}
 echo
 kubectl get ns
 echo
