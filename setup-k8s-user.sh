@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#----------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 #
 #-- Create a local user on the K8s cluster to perform tasks restricted to his or her namespace
 #
@@ -8,9 +8,9 @@
 #
 #-- Author: Cormac J. Hogan
 #
-#-- Version 1.0 (02-Nov-2020)
+#-- Version 1.0 (06-Nov-2020)
 #
-#----------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 
 clear
 echo
@@ -31,11 +31,47 @@ echo
 echo "Guidance:"
 echo " - First run script without any command line options to understand the flow."
 echo " - If satisifed it is working, run script with any additional command line option to skip enter"
-echo "   key requirement."
+echo "   key requirement after every step, e.g. './setup-k8s-user.sh auto'"
 echo
 echo "--------------------------------------------------------------------------------------------------"
 echo
 
+
+function check_deps()
+{
+	which kubectl > /dev/null 2>&1
+	if [ $? -ne 0 ]
+	then
+		echo "kubectl is not installed, or is not in the PATH, exiting ..."
+		exit
+	fi
+
+	which openssl > /dev/null 2>&1
+	if [ $? -ne 0 ]
+	then
+		echo "openssl is not installed, or is not in the PATH, exiting ..."
+		exit
+	fi
+
+	which awk > /dev/null 2>&1
+	if [ $? -ne 0 ]
+	then
+		echo "awk is not installed, or is not in the PATH, exiting ..."
+		exit
+	fi
+
+	which sed > /dev/null 2>&1
+	if [ $? -ne 0 ]
+	then
+		echo "sed is not installed, or is not in the PATH, exiting ..."
+		exit
+	fi
+}
+
+echo "-- Step 0: Checking dependencies ..."
+check_deps
+
+echo
 echo "Type in the name of the user (e.g. bob): \c"
 read user
 
@@ -46,7 +82,7 @@ then
 fi
 
 
-echo "Type in the name of the namespace that the user showul work in (e.g. bob): \c"
+echo "Type in the name of the namespace that the user should work in (e.g. bob): \c"
 read namespace
 
 if [ -z "$namespace" ]
@@ -61,6 +97,13 @@ echo
 echo "*** Current context is ${mycontext}" 
 echo "*** Creating a new restricted namespace ${namespace} for user ${user}"
 echo
+
+if [ -z $1 ]
+then
+	echo "Hit enter to continue";read null
+fi
+
+clear
 
 echo
 echo "-- Step 1: Delete older files from last run ..."
@@ -136,7 +179,7 @@ fi
 
 
 echo
-echo "-- Step 6: Check Status of CSR, currently not approved ..."
+echo "-- Step 6: Check Status of CSR, currently not approved, pending ..."
 echo
 kubectl get csr
 echo
@@ -269,7 +312,13 @@ echo "-- Step 15: Final Authentication Test..."
 echo
 kubectl version --kubeconfig=${user}-k8s-config
 echo
-echo "-- Congrats - ${user} is now authenticated but is not authorized to do anything. Let's fix that next..."
+if [ $? -eq 0 ]
+then
+	echo "-- Congrats - ${user} is now authenticated but is not authorized to do anything. Let's fix that next..."
+else
+	echo "Unfortunately the authentication test for ${user} did not work."
+	echo "Try the command \"kubectl version --kubeconfig=${user}-k8s-config\" manually and check the error for a hint"
+fi
 echo
 
 if [ -z $1 ]
@@ -317,12 +366,22 @@ fi
 echo
 echo "-- Step 19: Merge new config to .kube/config ..."
 echo
-kubectl config delete-context ${user} 2>/dev/null
+kubectl config delete-context ${user} >/dev/null 2>&1
 echo
+echo "-- Merging ${user}'s config with main config"
 KUBECONFIG=~/.kube/config:${user}-k8s-config
 kubectl config view --flatten >> ${user}-config-new.yaml
+echo "-- Copying merged config to main config"
+cp ~/.kube/config ~/.kube/config.bak.$$
 cp ${user}-config-new.yaml ~/.kube/config
+echo "-- Switching to new context ${user}"
 echo
 kubectl config use-context ${user}
 echo
 kubectl config get-contexts
+echo
+echo "-- Done ..."
+echo 
+echo "-- Note that you need to run kubectl commands as the actual user ${user} even after"
+echo "-- you have switched contexts. Otherwise you will be prompted for username and pwd."
+echo
