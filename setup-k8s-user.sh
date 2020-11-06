@@ -82,7 +82,7 @@ then
 fi
 
 
-echo "Type in the name of the namespace that the user should work in (e.g. bob): \c"
+echo "Type in the name of the namespace that the user should work in (e.g. bob-ns): \c"
 read namespace
 
 if [ -z "$namespace" ]
@@ -282,7 +282,7 @@ kubectl delete ns ${namespace} 2>/dev/null
 echo
 kubectl create ns ${namespace}
 echo
-kubectl label ns ${user} user=${namespace}
+kubectl label ns ${namespace} user=${user}
 echo
 kubectl get ns
 echo

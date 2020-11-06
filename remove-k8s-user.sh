@@ -22,9 +22,6 @@ echo "Future plans will be to merge both scripts into a single entity with multi
 echo
 echo "Prerequisites:"
 echo " - kubectl"
-echo " - openssl"
-echo " - awk"
-echo " - sed"
 echo " - a running Kubernetes cluster"
 echo
 echo "Guidance:"
@@ -44,27 +41,6 @@ function check_deps()
 		echo "kubectl is not installed, or is not in the PATH, exiting ..."
 		exit
 	fi
-
-	which openssl > /dev/null 2>&1
-	if [ $? -ne 0 ]
-	then
-		echo "openssl is not installed, or is not in the PATH, exiting ..."
-		exit
-	fi
-
-	which awk > /dev/null 2>&1
-	if [ $? -ne 0 ]
-	then
-		echo "awk is not installed, or is not in the PATH, exiting ..."
-		exit
-	fi
-
-	which sed > /dev/null 2>&1
-	if [ $? -ne 0 ]
-	then
-		echo "sed is not installed, or is not in the PATH, exiting ..."
-		exit
-	fi
 }
 
 echo "-- Step 0: Checking dependencies ..."
@@ -81,7 +57,7 @@ then
 fi
 
 
-echo "Type in the name of the namespace that the user should work in (e.g. bob): \c"
+echo "Type in the name of the namespace that the user has privilges in (e.g. bob-n): \c"
 read namespace
 
 if [ -z "$namespace" ]
