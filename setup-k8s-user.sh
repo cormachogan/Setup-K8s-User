@@ -370,6 +370,7 @@ kubectl config delete-context ${user} >/dev/null 2>&1
 echo
 echo "-- Merging ${user}'s config with main config"
 KUBECONFIG=~/.kube/config:${user}-k8s-config
+export KUBECONFIG
 kubectl config view --flatten >> ${user}-config-new.yaml
 echo "-- Copying merged config to main config"
 cp ~/.kube/config ~/.kube/config.bak.$$
